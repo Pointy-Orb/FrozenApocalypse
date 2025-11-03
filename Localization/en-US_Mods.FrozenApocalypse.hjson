@@ -1,2 +1,73 @@
-# This file will automatically update with entries for new content after a build and reload.
+Items: {
+	Peat: {
+		DisplayName: Peat
+		Tooltip: ""
+	}
 
+	FrozenAshItem: {
+		DisplayName: Frozen Ash
+		Tooltip: ""
+	}
+
+	FrozenLihzahrdBrickItem: {
+		DisplayName: Frozen Lihzahrd Brick
+		Tooltip: ""
+	}
+
+	PearlfrostItem: {
+		DisplayName: Pearlfrost
+		Tooltip: ""
+	}
+
+	PermafrostItem: {
+		DisplayName: Permafrost
+		Tooltip: ""
+	}
+
+	SandIceItem: {
+		DisplayName: Sand Ice
+		Tooltip: ""
+	}
+
+	CrimsandIceItem: {
+		DisplayName: Crimsand Ice
+		Tooltip: ""
+	}
+
+	EbonsandIceItem: {
+		DisplayName: Ebonsand Ice
+		Tooltip: ""
+	}
+
+	PearlsandIceItem: {
+		DisplayName: Pearlsand Ice
+		Tooltip: ""
+	}
+
+	CrimfrostItem: {
+		DisplayName: Crimfrost
+		Tooltip: ""
+	}
+
+	EbonfrostItem: {
+		DisplayName: Ebonfrost
+		Tooltip: ""
+	}
+
+	BoilerItem: {
+		Tooltip: ""
+		DisplayName: Boiler
+	}
+}
+
+Biomes: {
+	FrozenHell: {
+		TownNPCDialogueName: the Frozen Hell
+		DisplayName: Frozen Hell
+	}
+
+	FrozenOcean: {
+		TownNPCDialogueName: the Frozen Ocean
+		DisplayName: Frozen Ocean
+	}
+}
