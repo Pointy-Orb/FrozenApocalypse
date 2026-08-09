@@ -1,4 +1,8 @@
 using Terraria;
+using System.Linq;
+using Terraria.UI.Chat;
+using Terraria.GameContent;
+using System.Runtime.CompilerServices;
 using Terraria.Localization;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -105,11 +109,42 @@ public class Boiler : ModTile
         Vector2 zero = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange);
         var frame = Main.tileFrameCounter[Type] / 5;
         int frameYOffset = frame * AnimationFrameHeight + AnimationFrameHeight;
+        var alphaMult = Utils.Remap(entity.timers.Count, 1, 20, 0, 1);
         spriteBatch.Draw(
             glowTexture.Value,
             new Vector2(i * 16 - (int)Main.screenPosition.X, j * 16 - (int)Main.screenPosition.Y + 2) + zero,
             new Rectangle(tile.TileFrameX, tile.TileFrameY + frameYOffset, 16, 16),
-            Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            Color.White * alphaMult, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+
+        if (Main.hideUI)
+        {
+            return;
+        }
+        int frameX = Main.tile[i, j].TileFrameX;
+        int frameY = Main.tile[i, j].TileFrameY;
+        if (frameX > 17)
+        {
+            return;
+        }
+        if (frameY > 17)
+        {
+            return;
+        }
+        Vector2 textPos = new Vector2((i + 1) * 16 - (int)Main.screenPosition.X + 8, j * 16 - (int)Main.screenPosition.Y + 10) + zero;
+        int curTimerValue = entity.timers.ToArray().Sum() / 60;
+        var timer = TimeSpan.FromSeconds(curTimerValue);
+        DefaultInterpolatedStringHandler handler = new(0, 1);
+        if (timer.Hours > 0)
+        {
+            handler.AppendFormatted($"{timer.Hours}:");
+        }
+        handler.AppendFormatted($"{timer.Minutes.ToString(timer.Hours > 0 ? "D2" : "")}:");
+        handler.AppendFormatted($"{timer.Seconds.ToString("D2")}");
+        string text = handler.ToStringAndClear();
+        var font = FontAssets.MouseText.Value;
+        float size = 0.7f;
+        Vector2 origin = font.MeasureString(text) * new Vector2(0.5f, 0.5f);
+        ChatManager.DrawColorCodedStringWithShadow(spriteBatch, font, text, textPos, Color.White, 0f, origin, Vector2.One * size);
     }
 
     public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)
@@ -188,10 +223,10 @@ public class BoilerEntity : ModTileEntity
         return distX * distX + distY * distY <= timers.Count * timers.Count;
     }
 
-    public bool EntityInRange(float x, float y)
+    public bool EntityInRange(Vector2 pos)
     {
-        float distX = x - WorldCenter.X;
-        float distY = y - WorldCenter.Y;
+        float distX = pos.X - WorldCenter.X;
+        float distY = pos.Y - WorldCenter.Y;
         return distX * distX + distY * distY <= (timers.Count * 16) * (timers.Count * 16);
     }
 
@@ -215,10 +250,7 @@ public class BoilerEntity : ModTileEntity
     public override void SaveData(TagCompound tag)
     {
         tag["timers"] = timers.ToArray();
-        if (FuelUntilRangeIncrease != GetNextFuelQuota())
-        {
-            tag["FuelUntilRangeIncrease"] = FuelUntilRangeIncrease;
-        }
+        tag["FuelUntilRangeIncrease"] = FuelUntilRangeIncrease;
     }
 
     public override void LoadData(TagCompound tag)
@@ -226,7 +258,7 @@ public class BoilerEntity : ModTileEntity
         if (tag.ContainsKey("timers"))
         {
             var timerArray = tag.GetIntArray("timers");
-            for (int i = 0; i < timerArray.Length; i++)
+            for (int i = timerArray.Length - 1; i >= 0; i--)
             {
                 timers.Push(timerArray[i]);
             }
@@ -308,13 +340,11 @@ public class Fuels : GlobalItem
             RecipeGroup group = RecipeGroup.recipeGroups[groupIndex];
             foreach (int item in group.ValidItems)
             {
-                fuels.Add(item, 10);
+                fuels.Add(item, 5);
             }
         }
-        fuels.Add(ModContent.ItemType<Peat>(), 30);
-        fuels.Add(ItemID.LavaBucket, 60);
-        fuels.Add(ItemID.Meteorite, 120);
-        fuels.Add(ItemID.Hellstone, 120);
+        fuels.Add(ModContent.ItemType<Peat>(), 20);
+        fuels.Add(ItemID.LavaBucket, 30);
     }
 
     public override bool? UseItem(Item item, Player player)
@@ -347,7 +377,11 @@ public class Fuels : GlobalItem
             curTimer += fuels[item.type] * 60;
             boiler.timers.Push(curTimer);
         }
-        SoundEngine.PlaySound(SoundID.Item20, Main.MouseWorld);
+        SoundEngine.PlaySound(SoundID.Item34, Main.MouseWorld);
+        for (int i = 0; i < 3; i++)
+        {
+            Dust.NewDustPerfect(Main.MouseWorld, DustID.Torch);
+        }
         return true;
     }
 }

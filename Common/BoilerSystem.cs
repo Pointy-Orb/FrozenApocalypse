@@ -14,4 +14,16 @@ public class BoilerSystem : ModSystem
     {
         boilers.Clear();
     }
+
+    public static bool TileInBoilerRange(int i, int j)
+    {
+        foreach (BoilerEntity boiler in boilers)
+        {
+            if (boiler.TileInRange(i, j))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

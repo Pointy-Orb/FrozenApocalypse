@@ -3,6 +3,7 @@ using FrozenApocalypse.Content.TileEntities;
 using Microsoft.Xna.Framework;
 using Terraria.Audio;
 using FrozenApocalypse.Content.Tiles;
+using FrozenApocalypse.Content.Walls;
 using System.Collections.Generic;
 using Terraria.ModLoader;
 using Terraria.ID;
@@ -64,7 +65,12 @@ public class TileFreezing : ModSystem
             int x = Main.rand.Next(0, Main.maxTilesX);
             int y = Main.rand.Next(UpperBand, bandY);
             AttemptTileFreeze(x, y, false);
-            var pos = Main.LocalPlayer.Center.ToTileCoordinates();
+            x = Main.rand.Next(0, Main.maxTilesX);
+            y = Main.rand.Next(bandY + BandHeight / 2, bandY + BandHeight);
+            if (Main.tile[x, y].HasTile && WorldGen.TileIsExposedToAir(x, y))
+            {
+                AttemptTileFreeze(x, y, false);
+            }
         }
         wasDay = Main.dayTime;
     }
@@ -104,12 +110,20 @@ public class TileFreezing : ModSystem
                 break;
             }
         }
+        if (tile.WallType == WallID.JungleUnsafe || tile.WallType == WallID.Jungle)
+        {
+            tile.WallType = (ushort)ModContent.WallType<PeatWall>();
+        }
         if (!tile.HasTile)
         {
             return;
         }
         if (!FreezableTiles.ContainsKey(tile.TileType))
         {
+            if (TileID.Sets.Leaves[tile.TileType])
+            {
+                WorldGen.KillTile(x, y);
+            }
             if (TileID.Sets.Grass[tile.TileType])
             {
                 tile.TileType = TileID.Dirt;
@@ -127,7 +141,7 @@ public class TileFreezing : ModSystem
             return;
         }
         tile.TileType = (ushort)FreezableTiles[tile.TileType];
-        WorldGen.Reframe(x, y);
+        WorldGen.SquareTileFrame(x, y);
         if (!WorldGen.InWorld(x, y - 1))
         {
             return;
@@ -175,16 +189,22 @@ public class TileFreezing : ModSystem
             int upperBound = y;
             while (WorldGen.InWorld(x, upperBound - 1) && Main.tile[x, upperBound - 1].LiquidAmount > 0)
             {
-                var lTile = Main.tile[x, upperBound];
-                lTile.LiquidAmount = 0;
-                WorldGen.PlaceTile(x, upperBound, TileID.Stone, true);
+                if (!BoilerSystem.TileInBoilerRange(x, upperBound))
+                {
+                    var lTile = Main.tile[x, upperBound];
+                    lTile.LiquidAmount = 0;
+                    WorldGen.PlaceTile(x, upperBound, TileID.Stone, true);
+                }
                 upperBound--;
             }
             while (WorldGen.InWorld(x, lowerBound + 1) && Main.tile[x, lowerBound + 1].LiquidAmount > 0)
             {
-                var lTile = Main.tile[x, lowerBound];
-                lTile.LiquidAmount = 0;
-                WorldGen.PlaceTile(x, lowerBound, TileID.Stone, true);
+                if (!BoilerSystem.TileInBoilerRange(x, lowerBound))
+                {
+                    var lTile = Main.tile[x, lowerBound];
+                    lTile.LiquidAmount = 0;
+                    WorldGen.PlaceTile(x, lowerBound, TileID.Stone, true);
+                }
                 lowerBound++;
             }
             for (int j = upperBound; j <= lowerBound; j++)
@@ -192,13 +212,19 @@ public class TileFreezing : ModSystem
                 var i = x;
                 while (WorldGen.InWorld(i - 1, j) && Main.tile[i - 1, j].LiquidAmount > 0)
                 {
-                    var lTile = Main.tile[i, j];
-                    lTile.LiquidAmount = 0;
-                    WorldGen.PlaceTile(i, j, TileID.Stone, true);
+                    if (!BoilerSystem.TileInBoilerRange(i, j))
+                    {
+                        var lTile = Main.tile[i, j];
+                        lTile.LiquidAmount = 0;
+                        WorldGen.PlaceTile(i, j, TileID.Stone, true);
+                    }
                     i--;
                 }
-                WorldGen.PlaceTile(i, j, TileID.Stone, true);
-                if (WorldGen.InWorld(i - 1, j))
+                if (!BoilerSystem.TileInBoilerRange(i, j))
+                {
+                    WorldGen.PlaceTile(i, j, TileID.Stone, true);
+                }
+                if (WorldGen.InWorld(i - 1, j) && !BoilerSystem.TileInBoilerRange(i - 1, j))
                 {
                     var lTile = Main.tile[i - 1, j];
                     lTile.LiquidAmount = 0;
@@ -208,19 +234,25 @@ public class TileFreezing : ModSystem
                 i = x;
                 while (WorldGen.InWorld(i + 1, j) && Main.tile[i + 1, j].LiquidAmount > 0)
                 {
-                    var lTile = Main.tile[i, j];
-                    lTile.LiquidAmount = 0;
-                    WorldGen.PlaceTile(i, j, TileID.Stone, true);
+                    if (!BoilerSystem.TileInBoilerRange(i, j))
+                    {
+                        var lTile = Main.tile[i, j];
+                        lTile.LiquidAmount = 0;
+                        WorldGen.PlaceTile(i, j, TileID.Stone, true);
+                    }
                     i++;
                 }
-                if (WorldGen.InWorld(i + 1, j))
+                if (WorldGen.InWorld(i + 1, j) && !BoilerSystem.TileInBoilerRange(i + 1, j))
                 {
                     var lTile = Main.tile[i + 1, j];
                     lTile.LiquidAmount = 0;
                     lTile.Slope = SlopeType.Solid;
                     lTile.IsHalfBlock = false;
                 }
-                WorldGen.PlaceTile(i, j, TileID.Stone, true);
+                if (!BoilerSystem.TileInBoilerRange(i, j))
+                {
+                    WorldGen.PlaceTile(i, j, TileID.Stone, true);
+                }
             }
             tile.LiquidAmount = 0;
             WorldGen.PlaceTile(x, y, TileID.Stone, true);
@@ -238,6 +270,10 @@ public class TileFreezing : ModSystem
         if (tile.TileType == TileID.BreakableIce)
         {
             WorldGen.KillTile(i, j);
+        }
+        if (tile.WallType == ModContent.WallType<PeatWall>())
+        {
+            tile.WallType = WallID.JungleUnsafe;
         }
         if (!FreezableTiles.ContainsValue(tile.TileType))
         {
@@ -257,7 +293,7 @@ public class TileFreezing : ModSystem
         {
             tile.TileType = TileID.Grass;
         }
-        WorldGen.Reframe(i, j);
+        WorldGen.SquareTileFrame(i, j);
     }
 }
 
@@ -266,6 +302,22 @@ public class RandomUpdateFreeze : GlobalTile
     public override void RandomUpdate(int i, int j, int type)
     {
         if (j > TileFreezing.bandY)
+        {
+            return;
+        }
+        TileFreezing.AttemptTileFreeze(i, j, true);
+    }
+}
+
+public class RandomUpdateWallFreeze : GlobalWall
+{
+    public override void RandomUpdate(int i, int j, int type)
+    {
+        if (j > TileFreezing.bandY)
+        {
+            return;
+        }
+        if (type != WallID.JungleUnsafe && type != WallID.Jungle)
         {
             return;
         }

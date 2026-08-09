@@ -14,12 +14,12 @@ public class TreesAndStalagtites : ModSystem
 {
     public override void Load()
     {
-        IL_WorldGen.CheckTree += MakeModTilesValidForTrees;
-        On_WorldGen.GetTreeLeaf += RightTreeLeaves;
-        On_WorldGen.GetTreeType += RightTreeType;
-        On_WorldGen.GetCommonTreeFoliageData += TreeData;
-        On_WorldGen.KillTile_GetTreeDrops += DropBorealPlease;
-        On_TileDrawing.GetTreeVariant += GetTreeVariant;
+        //IL_WorldGen.CheckTree += MakeModTilesValidForTrees;
+        //On_WorldGen.GetTreeLeaf += RightTreeLeaves;
+        //On_WorldGen.GetTreeType += RightTreeType;
+        //On_WorldGen.GetCommonTreeFoliageData += TreeData;
+        //On_WorldGen.KillTile_GetTreeDrops += DropBorealPlease;
+        //On_TileDrawing.GetTreeVariant += GetTreeVariant;
     }
 
     private static void MakeModTilesValidForTrees(ILContext il)

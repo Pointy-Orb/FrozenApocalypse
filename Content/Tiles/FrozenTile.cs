@@ -11,6 +11,9 @@ public abstract class FrozenTile : ModTile
     public abstract int UnfrozenCounterpart { get; }
     public abstract Color MapColor { get; }
 
+    public virtual int[] Fallbacks => empty;
+    private int[] empty = new int[0];
+
     public virtual bool Ice => true;
 
     public virtual bool Hot => false;
@@ -48,11 +51,7 @@ public abstract class FrozenTile : ModTile
         TileID.Sets.Ices[Type] = Ice;
         TileID.Sets.IcesSlush[Type] = Ice;
         TileID.Sets.Snow[Type] = !Ice;
-        TileID.Sets.Conversion.Snow[Type] = !Ice;
         TileID.Sets.IcesSnow[Type] = true;
-
-        //temporary
-        TileID.Sets.SnowBiome[Type] = 1;
 
         if (TileID.Sets.Corrupt[UnfrozenCounterpart])
         {
@@ -62,12 +61,20 @@ public abstract class FrozenTile : ModTile
         {
             TileID.Sets.AddCrimsonTile(Type);
         }
-        if (TileID.Sets.Hallow[Type])
+        if (TileID.Sets.Hallow[UnfrozenCounterpart])
         {
             TileID.Sets.Hallow[Type] = true;
-            TileID.Sets.HallowBiome[Type] = 1;
+            TileID.Sets.HallowBiome[Type] = TileID.Sets.HallowBiome[UnfrozenCounterpart];
             TileID.Sets.HallowBiomeSight[Type] = true;
             TileID.Sets.CanGrowCrystalShards[Type] = true;
+        }
+        if (TileID.Sets.JungleBiome[UnfrozenCounterpart] > 0)
+        {
+            FrozenApocalypseIDs.TileSets.FrozenJungleTiles.Add(Type);
+        }
+        if (TileID.Sets.isDesertBiomeSand[UnfrozenCounterpart])
+        {
+            FrozenApocalypseIDs.TileSets.FrozenDesertTiles.Add(Type);
         }
 
         VanillaFallbackOnModDeletion = (ushort)UnfrozenCounterpart;
@@ -78,6 +85,24 @@ public abstract class FrozenTile : ModTile
         HitSound = SoundID.Item50;
         DustType = DustID.Ice;
         PostSetStaticDefaults();
+    }
+
+    public sealed override void PostSetupTileMerge()
+    {
+        PostSetupContent();
+        for (int i = 0; i < Fallbacks.Length; i++)
+        {
+            if (TileFreezing.FreezableTiles.ContainsKey(Fallbacks[i]))
+            {
+                continue;
+            }
+            TileFreezing.FreezableTiles.Add(Fallbacks[i], Type);
+        }
+    }
+
+    public virtual void PostSetupContent()
+    {
+
     }
 
     public virtual void PostSetStaticDefaults() { }

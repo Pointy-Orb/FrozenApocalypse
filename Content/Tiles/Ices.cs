@@ -52,7 +52,16 @@ public class CrimsandIce : FrozenTile
 public class CrimsandIceItem : FrozenTileItem { public override int Tile => ModContent.TileType<CrimsandIce>(); }
 
 
-public class Permafrost : FrozenTile { public override int UnfrozenCounterpart => TileID.Mud; public override Color MapColor => new Color(103, 156, 161); }
+public class Permafrost : FrozenTile
+{
+    public override int UnfrozenCounterpart => TileID.Mud;
+    public override Color MapColor => new Color(103, 156, 161);
+
+    public override void PostSetStaticDefaults()
+    {
+        FrozenApocalypseIDs.TileSets.FrozenJungleTiles.Add(Type);
+    }
+}
 public class PermafrostItem : FrozenTileItem { public override int Tile => ModContent.TileType<Permafrost>(); }
 
 public class FrozenAsh : FrozenTile { public override int UnfrozenCounterpart => TileID.Ash; public override Color MapColor => new Color(105, 119, 122); }
@@ -96,12 +105,27 @@ public class Peat : FrozenTile
 
     public override int UnfrozenCounterpart => TileID.JungleGrass;
 
+    public override int[] Fallbacks => jungleGrasses.ToArray();
+    private List<int> jungleGrasses = new();
+
     public override bool Ice => false;
 
     public override IEnumerable<Item> GetItemDrops(int i, int j)
     {
         var peatItem = new Item(ModContent.ItemType<Items.Peat>(), Main.rand.Next(1, 3));
         yield return peatItem;
+    }
+
+    public override void PostSetupContent()
+    {
+        for (int i = 0; i < TileID.Sets.Conversion.JungleGrass.Length; i++)
+        {
+            if (!TileID.Sets.Conversion.JungleGrass[i])
+            {
+                continue;
+            }
+            jungleGrasses.Add(i);
+        }
     }
 }
 
@@ -135,8 +159,7 @@ public class EvilSnow : FrozenTile
         Main.tileMerge[Type][TileID.SnowBlock] = true;
         Main.tileMerge[TileID.SnowBlock][Type] = true;
         Main.tileMergeDirt[Type] = true;
-        TileID.Sets.SnowBiome[Type] = 1;
-        VanillaFallbackOnModDeletion = TileID.IceBlock;
+        VanillaFallbackOnModDeletion = TileID.SnowBlock;
     }
 
     public override IEnumerable<Item> GetItemDrops(int i, int j)
@@ -158,8 +181,7 @@ public class EvilIce : FrozenTile
         Main.tileMerge[Type][TileID.IceBlock] = true;
         Main.tileMerge[TileID.IceBlock][Type] = true;
         Main.tileMerge[TileID.Stone][Type] = true;
-        TileID.Sets.SnowBiome[Type] = 1;
-        VanillaFallbackOnModDeletion = TileID.SnowBlock;
+        VanillaFallbackOnModDeletion = TileID.IceBlock;
     }
 
     public override IEnumerable<Item> GetItemDrops(int i, int j)

@@ -1,3 +1,11 @@
+DeathMessages: {
+	FreezeDeath0: "{0} became a popsicle."
+	FreezeDeath1: "{0} attempted amateur cryogenics."
+	FreezeDeath2: "{0} was left in the freezer."
+	FreezeDeath3: "{0} forgot to bring a jacket."
+	FreezeDeath4: "{0} was given an ice pack."
+}
+
 Items: {
 	Peat: {
 		DisplayName: Peat
@@ -55,8 +63,18 @@ Items: {
 	}
 
 	BoilerItem: {
-		Tooltip: ""
+		Tooltip:
+			'''
+			Melts frozen tiles and keeps you warm
+			Needs fuel
+			'''
 		DisplayName: Boiler
+	}
+
+	AutoloadFrostTileItem: {
+		DisplayName0: Frosted {0}
+		DisplayName1: "{0} Ice"
+		Tooltip: ""
 	}
 }
 
@@ -69,5 +87,31 @@ Biomes: {
 	FrozenOcean: {
 		TownNPCDialogueName: the Frozen Ocean
 		DisplayName: Frozen Ocean
+	}
+
+	SnowWaste: {
+		DisplayName: Snow Waste
+		TownNPCDialogueName: the Snow Waste
+	}
+
+	FrozenJungle: {
+		TownNPCDialogueName: the Tundra
+		DisplayName: Tundra
+	}
+}
+
+Buffs: {
+	BoilerBuff: {
+		Description:
+			'''
+			The nearby {^0:boiler;boilers} {^0:keeps;keep} you warm.
+			Number of nearby boilers: {0}
+			'''
+		DisplayName: Boiler
+	}
+
+	Hypothermia: {
+		DisplayName: Hypothermia
+		Description: Slowly freezing to death
 	}
 }
