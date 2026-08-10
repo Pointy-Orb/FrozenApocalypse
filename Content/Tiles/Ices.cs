@@ -176,6 +176,8 @@ public class EvilIce : FrozenTile
 
     public override Color MapColor => new Color(144, 195, 232);
 
+    public override int[] Fallbacks => new int[] { TileID.ActiveStoneBlock, TileID.InactiveStoneBlock };
+
     public override void PostSetStaticDefaults()
     {
         Main.tileMerge[Type][TileID.IceBlock] = true;

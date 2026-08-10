@@ -1,0 +1,32 @@
+Also maybe think about making different levels of warmth, and have warming things add +1, to potentially allow for more nuance.
+
+Idea for screwing over the surface more: the Glacier
+
+As the band travels further and further away from the surface, a band of topsnow should begin to accumulate on the surface.
+This topsnow band gets thicker over time,and eventually, once it's thick enough, the bottom parts of the band start compacting.
+First into packed snow, then into firn, then into glacial ice, then finally blue ice at the bottom. 
+Only topsnow can be melted by a boiler.
+Glacial ice and blue ice blocks that are not exposed to air generate glacial ice and blue ice walls, respectively.
+
+Idea for implementation:
+Adding a layer is a single function that gets called periodically. The function would scan through all of the world's columns, finding the first aboveground block that doesn't have a wall behind it, or the first glacial block. It then goes one above that block, and adds topsnow. If the block in question is a glacial block, then it will loop down the column until it runs out of glacial blocks. The glacial block type will be updated according to how far from the top it is. A block can only become more compact, for instance, moving blue ice to the top won't have it turn into topsnow.
+<= 4 blocks: topsnow
+>4 blocks: packed snow
+>10 blocks: firn
+>20 blocks: glacial ice
+>32 blocks: blue ice
+In order to simulate glacial gravity (poorly), each glacial block will check if the block directly to its left or right is active. If it isn't, it then checks if teh block below that block is solid. If it is, that column won't gain a new topsnow block, and instead will grant a second topsnow block to the relevant column. The check is made before the new layer is placed, perhaps to a dictionary that contains the column index and its topsnow addition modifier.
+If said solid block is a tree, then the whole tree becomes petrified and becomes solid.
+
+This function will almost certainly have to run on its own thread, given its complexity and scale
+
+Idea for variety and also secret other thing: Separate the mod into two variants: ice age and rogue planet.
+
+Ice age would be the mod as it is now, along with the glacier idea. Something gets screwed up in the climate and everything begins to freeze, all the way to hell. A blizzard envelops the surface 24/7.
+
+Rogue planet would be a new variant. The glacier wouldn't grow as mighty and would likely just be the few layers of topsnow and packed snow, as the blizzard phase eventually stops and the atmosphere itself begins to freeze, depositing air snow on the surface. Freezing and deoxygenation stop at the lava layer. Past a certain point, the world becomes like remix in that there is no sun.
+Air becomes a resource, obtained from melting air snow into a bottle or making an oxygenator to keep your NPCs alive.
+Rogue planet should be split into phases, the blizzard phase and the atmosphere freezing phase. Perhaps the atmosphere freezing is also in a band that follows the blizzard band by a few steps.
+Decide if it is worth it to disallow flight in deoxygenated areas, due to the fact flight needs air resistance. Decide if the gameplay implications would be interesting or just frustrating.
+
+Secret other thing: Add compatibility with the Solar Apocalypse mod, so that the rogue planet scenario triggers automatically after the sun dies in Dissipation.

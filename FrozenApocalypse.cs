@@ -29,21 +29,5 @@ namespace FrozenApocalypse
             TileSets.SandIce[ModContent.TileType<CrimsandIce>()] = true;
             TileSets.SandIce[ModContent.TileType<PearlsandIce>()] = true;
         }
-
-        public override void Load()
-        {
-            if (Main.dedServ)
-            {
-                return;
-            }
-            Asset<Effect> coldFilter = this.Assets.Request<Effect>("Assets/Effects/ColdShader");
-            Filters.Scene["FrozenApocalypse:ColdFilter"] = new Filter(new ScreenShaderData(coldFilter, "ColdFilter"), EffectPriority.High);
-            Filters.Scene["FrozenApocalypse:ColdFilter"].GetShader().UseColor(Color.Aqua);
-            Filters.Scene["FrozenApocalypse:ColdFilter"].GetShader().UseSecondaryColor(Color.DodgerBlue);
-            Asset<Texture2D> noise = this.Assets.Request<Texture2D>("Assets/Noise");
-            Filters.Scene["FrozenApocalypse:ColdFilter"].GetShader().UseImage(noise);
-            Filters.Scene["FrozenApocalypse:ColdFilter"].GetShader().UseIntensity(0.4f);
-            Filters.Scene["FrozenApocalypse:ColdFilter"].GetShader().UseOpacity(0.2f);
-        }
     }
 }

@@ -37,6 +37,7 @@ public class Boiler : ModTile
         TileObjectData.newTile.CoordinateHeights = [16, 16, 16];
         TileObjectData.newTile.DrawYOffset = 2;
         TileObjectData.newTile.HookPostPlaceMyPlayer = ModContent.GetInstance<BoilerEntity>().Generic_HookPostPlaceMyPlayer;
+        TileObjectData.newTile.LavaDeath = false;
         TileObjectData.addTile(Type);
 
         AnimationFrameHeight = 54;
@@ -276,53 +277,18 @@ public class BoilerEntity : ModTileEntity
 
     public void DrawRange()
     {
-        int x = 0;
-        int y = timers.Count * 16;
-        int d = 3 - 2 * timers.Count * 16;
-        while (x <= y)
+        double radians = 0;
+        while (radians < MathHelper.PiOver4)
         {
             for (int i = 0; i < 8; i++)
             {
-                Vector2 pos;
-                switch (i)
-                {
-                    case 1:
-                        pos = new Vector2(WorldCenter.X - x, WorldCenter.Y + y);
-                        break;
-                    case 2:
-                        pos = new Vector2(WorldCenter.X + x, WorldCenter.Y - y);
-                        break;
-                    case 3:
-                        pos = new Vector2(WorldCenter.X - x, WorldCenter.Y - y);
-                        break;
-                    case 4:
-                        pos = new Vector2(WorldCenter.X + y, WorldCenter.Y + x);
-                        break;
-                    case 5:
-                        pos = new Vector2(WorldCenter.X - y, WorldCenter.Y + x);
-                        break;
-                    case 6:
-                        pos = new Vector2(WorldCenter.X + y, WorldCenter.Y - x);
-                        break;
-                    case 7:
-                        pos = new Vector2(WorldCenter.X - y, WorldCenter.Y - x);
-                        break;
-                    case 0:
-                    default:
-                        pos = new Vector2(WorldCenter.X + x, WorldCenter.Y + y);
-                        break;
-                }
-                var dust = Dust.NewDustPerfect(pos, DustID.Torch, Vector2.Zero);
+                Vector2 pos = Center.ToWorldCoordinates();
+                double relativeRadians = radians + i * MathHelper.PiOver4;
+                pos += new Vector2((float)(timers.Count * Math.Sin(relativeRadians) * 16), (float)(timers.Count * Math.Cos(relativeRadians) * 16));
+                Dust dust = Dust.NewDustPerfect(pos, DustID.AmberBolt, Vector2.Zero);
                 dust.noGravity = true;
             }
-            if (d < 0)
-                d += 4 * x + 6;
-            else
-            {
-                d += 4 * (x - y) + 10;
-                y--;
-            }
-            x++;
+            radians += (Math.PI * 0.0625) / (double)timers.Count;
         }
     }
 }

@@ -15,18 +15,26 @@ namespace FrozenApocalypse.Content.Tiles;
 public class AutoloadFrostTile : ModTile
 {
     public readonly int UnfrozenCounterpart;
+    private readonly int manualItemDrop;
+    public bool Hot { get; }
 
     public override string Name => $"Frosted{TileID.Search.GetName(UnfrozenCounterpart)}";
 
     public override string Texture => $"Terraria/Images/Tiles_{UnfrozenCounterpart}";
 
-    public AutoloadFrostTile(int originalType)
+    public AutoloadFrostTile(int originalType, int manualItemDrop = -1, bool hot = false)
     {
         UnfrozenCounterpart = originalType;
+        this.manualItemDrop = manualItemDrop;
+        Hot = hot;
     }
 
     public override void SetStaticDefaults()
     {
+        if (manualItemDrop > 0)
+        {
+            RegisterItemDrop(manualItemDrop);
+        }
         TileFreezing.FreezableTiles.Add(UnfrozenCounterpart, Type);
         Main.tileSolid[Type] = Main.tileSolid[UnfrozenCounterpart];
         Main.tileMergeDirt[Type] = Main.tileMergeDirt[UnfrozenCounterpart];
@@ -183,9 +191,9 @@ public class AutoloadTileLoader : ILoadable
 
     public void Load(Mod mod)
     {
-        mod.AddContent(new AutoloadFrostTile(TileID.Hive));
-        mod.AddContent(new AutoloadFrostTile(TileID.LivingWood));
-        mod.AddContent(new AutoloadFrostTile(TileID.LivingMahogany));
+        mod.AddContent(new AutoloadFrostTile(TileID.Hive, ItemID.Hive));
+        mod.AddContent(new AutoloadFrostTile(TileID.LivingWood, ItemID.Wood));
+        mod.AddContent(new AutoloadFrostTile(TileID.LivingMahogany, ItemID.RichMahogany));
 
         mod.AddContent(new AutoloadFrostTile(TileID.ClayBlock));
         mod.AddContent(new AutoloadFrostTileItem(ItemID.ClayBlock));
@@ -195,22 +203,22 @@ public class AutoloadTileLoader : ILoadable
         {
             if (i < TileID.Sets.Conversion.Sand.Length && TileID.Sets.Conversion.Sand[i] && !vanillaSands.Contains(i))
             {
-                mod.AddContent(new AutoloadFrostTile(i));
+                mod.AddContent(new AutoloadFrostTile(i, -1, true));
                 AddTileForItem(i, mod, 1);
             }
             if (i < TileID.Sets.Conversion.HardenedSand.Length && TileID.Sets.Conversion.HardenedSand[i])
             {
-                mod.AddContent(new AutoloadFrostTile(i));
+                mod.AddContent(new AutoloadFrostTile(i, -1, true));
                 AddTileForItem(i, mod);
             }
             if (i < TileID.Sets.Conversion.Sandstone.Length && TileID.Sets.Conversion.Sandstone[i])
             {
-                mod.AddContent(new AutoloadFrostTile(i));
+                mod.AddContent(new AutoloadFrostTile(i, -1, true));
                 AddTileForItem(i, mod);
             }
             if (i < TileID.Sets.Conversion.MushroomGrass.Length && TileID.Sets.Conversion.MushroomGrass[i])
             {
-                mod.AddContent(new AutoloadFrostTile(i));
+                mod.AddContent(new AutoloadFrostTile(i, ModContent.ItemType<PermafrostItem>()));
             }
         }
     }

@@ -16,7 +16,7 @@ public class SnowWaste : ModBiome
 
     public override bool IsBiomeActive(Player player)
     {
-        return ModContent.GetInstance<FrozenTileCounts>().SnowWasteTileCount > 300;
+        return ModContent.GetInstance<FrozenTileCounts>().SnowWasteTileCount > 300 && !player.ZoneJungle;
     }
 
     public override SceneEffectPriority Priority => SceneEffectPriority.BiomeMedium;

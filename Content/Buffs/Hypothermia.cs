@@ -97,3 +97,15 @@ public class HypothermiaPlayer : ModPlayer
         Player.lifeRegen -= DebuffDamage;
     }
 }
+
+public class HypothermiaNPC : GlobalNPC
+{
+    public override bool InstancePerEntity => true;
+
+    public bool hypothermia;
+
+    public override void ResetEffects(NPC npc)
+    {
+        npc.GetGlobalNPC<HypothermiaNPC>().hypothermia = false;
+    }
+}

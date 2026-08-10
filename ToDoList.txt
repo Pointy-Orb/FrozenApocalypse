@@ -1,0 +1,11 @@
+Add coal as better boiler fuel
+Make boiler fuels say so in tooltips
+Create autoloaded frost walls
+Create non-autoloaded frost walls
+Have cold effects be more visible on the character (change the tint and the eye style)
+Make cold effects affect npcs as well
+Add a hardmode boiler with better range
+Add the glacier
+Create proper frozen desert biome
+Fix the fire ring around boilers
+Re-examine boiler balancing

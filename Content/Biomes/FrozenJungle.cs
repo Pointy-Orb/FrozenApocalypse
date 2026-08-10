@@ -11,7 +11,7 @@ public class FrozenJungle : ModBiome
 
     public override bool IsBiomeActive(Player player)
     {
-        return ModContent.GetInstance<FrozenTileCounts>().FrozenJungleTileCount > 400;
+        return ModContent.GetInstance<FrozenTileCounts>().FrozenJungleTileCount > 400 && !(player.ZoneJungle && player.GetModPlayer<ColdDebuffPlayer>().boilerWarm);
     }
 
     public override SceneEffectPriority Priority => SceneEffectPriority.BiomeMedium;

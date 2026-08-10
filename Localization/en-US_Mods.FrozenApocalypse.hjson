@@ -114,4 +114,19 @@ Buffs: {
 		DisplayName: Hypothermia
 		Description: Slowly freezing to death
 	}
+
+	Frostnip: {
+		Description: Life regen disabled and potion sickness duration increased
+		DisplayName: Frostnip
+	}
+}
+
+CommonTooltips: {
+	BoilerFuel: Can be used as fuel for a boiler
+	Warming: "{0} will help keep you warm"
+	Wear: Wearing
+	Equip: Equipping
+	Drink: Drinking
+	SlightWarming: Slight warming effect
+	SignificantWarming: Significant warming effect
 }

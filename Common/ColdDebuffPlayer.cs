@@ -3,7 +3,7 @@ using System;
 using Terraria.ModLoader;
 using Terraria.ID;
 using FrozenApocalypse.Content.TileEntities;
-using Terraria.Graphics.Effects;
+using Terraria.DataStructures;
 using FrozenApocalypse.Content.Buffs;
 
 namespace FrozenApocalypse;
@@ -18,10 +18,6 @@ public class ColdDebuffPlayer : ModPlayer
     public int WarmthLevel { get; set; } = 0;
     public int NetColdLevel => Math.Max(ColdLevel - WarmthLevel, 0);
     internal bool handWarmer = false;
-
-    private int visualColdLevel = 0;
-    private int VisualColdLevelTarget => NetColdLevel > 0 ? (coldLevelInternval * NetColdLevel) : -180;
-    private const int coldLevelInternval = 60;
 
     public override void ResetEffects()
     {
@@ -40,72 +36,23 @@ public class ColdDebuffPlayer : ModPlayer
     {
         CalculateColdLevel();
         CalculateWarmthLevel();
-        if (ColdLevel > 0 && WarmthLevel < 1)
+        if ((ColdLevel > 0 && WarmthLevel < 1))
         {
+            Player.AddBuff(BuffID.Chilled, 20);
+        }
+        if (NetColdLevel >= 5 && WarmthLevel <= 9)
+        {
+            Player.buffImmune[BuffID.Chilled] = false;
             Player.AddBuff(BuffID.Chilled, 20);
         }
         if (NetColdLevel >= Hypothermia.MinColdLevel)
         {
             Player.AddBuff(ModContent.BuffType<Hypothermia>(), 20);
         }
-    }
-
-    public override void PostUpdate()
-    {
-        if (Main.dedServ)
+        if (NetColdLevel >= Frostnip.MinColdLevel)
         {
-            return;
+            Player.AddBuff(ModContent.BuffType<Frostnip>(), 20);
         }
-        if (Player.whoAmI != Main.myPlayer)
-        {
-            return;
-        }
-        if (NetColdLevel > 0 && !Filters.Scene["FrozenApocalypse:ColdFilter"].Active)
-        {
-            Filters.Scene.Activate("FrozenApocalypse:ColdFilter");
-        }
-        if (NetColdLevel <= 0 && Filters.Scene["FrozenApocalypse:ColdFilter"].Active)
-        {
-            Filters.Scene["FrozenApocalypse:ColdFilter"].Deactivate();
-        }
-        if (!Filters.Scene["FrozenApocalypse:ColdFilter"].Active)
-        {
-            return;
-        }
-        UpdateFilter();
-    }
-
-    private void UpdateFilter()
-    {
-        if (visualColdLevel > VisualColdLevelTarget)
-        {
-            visualColdLevel--;
-        }
-        if (visualColdLevel < VisualColdLevelTarget)
-        {
-            visualColdLevel++;
-        }
-        if (VisualColdLevelTarget - visualColdLevel > 60)
-        {
-            visualColdLevel += 2;
-        }
-        if (VisualColdLevelTarget - visualColdLevel < -60)
-        {
-            visualColdLevel -= 2;
-        }
-        visualColdLevel = Math.Min(visualColdLevel, 420);
-        int stackedLevels = visualColdLevel / coldLevelInternval;
-        int remainderLevel = visualColdLevel % coldLevelInternval;
-        float transitionAmount;
-        if (visualColdLevel > VisualColdLevelTarget)
-        {
-            transitionAmount = MathF.Pow((float)remainderLevel / (float)coldLevelInternval, 2f);
-        }
-        else
-        {
-            transitionAmount = 1 - MathF.Pow(1 - ((float)remainderLevel / (float)coldLevelInternval), 2f);
-        }
-        Filters.Scene["FrozenApocalypse:ColdFilter"].GetShader().UseProgress((float)stackedLevels * 0.05f + transitionAmount * 0.05f - 0.8f);
     }
 
     private void CalculateColdLevel()
@@ -130,7 +77,7 @@ public class ColdDebuffPlayer : ModPlayer
     {
         if (Player.HasBuff(BuffID.Warmth))
         {
-            WarmthLevel += 2 + ColdLevel / 2;
+            WarmthLevel += 4;
         }
         WarmthLevel += 4 * numZoneBoilers;
         if (Player.HasBuff(BuffID.Campfire))
@@ -148,6 +95,18 @@ public class ColdDebuffPlayer : ModPlayer
         if (handWarmer)
         {
             WarmthLevel += 4;
+        }
+        if (Player.armor[0].type == ItemID.EskimoHood || Player.armor[0].type == ItemID.PinkEskimoHood)
+        {
+            WarmthLevel += 2;
+        }
+        if (Player.armor[1].type == ItemID.EskimoCoat || Player.armor[1].type == ItemID.PinkEskimoCoat)
+        {
+            WarmthLevel += 3;
+        }
+        if (Player.armor[2].type == ItemID.EskimoPants || Player.armor[2].type == ItemID.PinkEskimoPants)
+        {
+            WarmthLevel += 1;
         }
     }
 
@@ -169,6 +128,13 @@ public class ColdDebuffPlayer : ModPlayer
         {
             Player.AddBuff(ModContent.BuffType<BoilerBuff>(), 20, true);
         }
+    }
+
+    public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright)
+    {
+        r = Utils.Remap(NetColdLevel, 0, 10, r, r * 0.3f, true);
+        g = Utils.Remap(NetColdLevel, 0, 10, g, g * 0.5f, true);
+        b = Utils.Remap(NetColdLevel, 0, 10, b, 1, true);
     }
 }
 

@@ -13,7 +13,7 @@ namespace FrozenApocalypse;
 
 public class TileFreezing : ModSystem
 {
-    public static int BandHeight => Main.maxTilesY / 40;
+    public static int BandHeight => Main.maxTilesY / 20;
 
     public static int UpperBand => bandY - BandHeight;
 
@@ -21,10 +21,7 @@ public class TileFreezing : ModSystem
 
     public static int ConvertsPerUpdate => Main.maxTilesY / 600;
 
-    public static Dictionary<int, int> FreezableTiles = new()
-    {
-        { TileID.Silt, TileID.Slush }
-    };
+    public static Dictionary<int, int> FreezableTiles = new();
 
     bool wasDay = true;
 
@@ -73,10 +70,6 @@ public class TileFreezing : ModSystem
             }
         }
         wasDay = Main.dayTime;
-    }
-
-    public override void PostUpdateWorld()
-    {
     }
 
     public static void AttemptTileFreeze(int x, int y, bool noPeat = false)
@@ -140,6 +133,10 @@ public class TileFreezing : ModSystem
         {
             return;
         }
+        if (ModContent.GetModTile(FreezableTiles[tile.TileType]) is AutoloadFrostTile autoloadFrozenTile && autoloadFrozenTile.Hot && y > UpperBand)
+        {
+            return;
+        }
         tile.TileType = (ushort)FreezableTiles[tile.TileType];
         WorldGen.SquareTileFrame(x, y);
         if (!WorldGen.InWorld(x, y - 1))
@@ -169,19 +166,24 @@ public class TileFreezing : ModSystem
         {
             return;
         }
-        if (tile.LiquidType == LiquidID.Water)
+        if (tile.LiquidType == LiquidID.Water || tile.LiquidType == LiquidID.Honey)
         {
+            int iceType = tile.LiquidType == LiquidID.Honey ? ModContent.GetInstance<FrozenApocalypse>().Find<ModTile>("FrostedHoneyBlock").Type : TileID.BreakableIce;
             int j = y;
-            while (WorldGen.InWorld(x, j - 1) && Main.tile[x, j - 1].LiquidAmount > 0)
+            while (WorldGen.InWorld(x, j - 1) && Main.tile[x, j - 1].LiquidAmount > 0 && !(Main.tile[x, j - 1].HasTile && Main.tile[x, j].LiquidAmount >= byte.MaxValue))
             {
                 j--;
             }
-            if (Main.tile[x, j - 1].TileType == TileID.BreakableIce)
+            if (Main.tile[x, j - 1].HasTile && Main.tile[x, j].LiquidAmount >= byte.MaxValue)
+            {
+                return;
+            }
+            if (BoilerSystem.TileInBoilerRange(x, j))
             {
                 return;
             }
             Main.tile[x, j].LiquidAmount = 0;
-            WorldGen.PlaceTile(x, j, TileID.BreakableIce, true);
+            WorldGen.PlaceTile(x, j, iceType, true);
         }
         if (tile.LiquidType == LiquidID.Lava)
         {
@@ -267,9 +269,15 @@ public class TileFreezing : ModSystem
             return;
         }
         Tile tile = Main.tile[i, j];
+        if (!tile.HasTile)
+        {
+            return;
+        }
         if (tile.TileType == TileID.BreakableIce)
         {
-            WorldGen.KillTile(i, j);
+            tile.HasTile = false;
+            WorldGen.PlaceLiquid(i, j, (byte)LiquidID.Water, byte.MaxValue);
+            WorldGen.SquareTileFrame(i, j);
         }
         if (tile.WallType == ModContent.WallType<PeatWall>())
         {
