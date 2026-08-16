@@ -4,8 +4,9 @@ using Terraria.ModLoader;
 using MonoMod.Cil;
 using Terraria.DataStructures;
 using Terraria.Localization;
-using Terraria.Utilities;
+using Terraria.ID;
 using static Mono.Cecil.Cil.OpCodes;
+using FrozenApocalypse.Warmth;
 
 namespace FrozenApocalypse.Content.Buffs;
 
@@ -34,6 +35,11 @@ public class Hypothermia : ModBuff
     public override void Update(Player player, ref int buffIndex)
     {
         player.GetModPlayer<HypothermiaPlayer>().hypothermia = true;
+    }
+
+    public override void Update(NPC npc, ref int buffIndex)
+    {
+        npc.GetGlobalNPC<HypothermiaNPC>().hypothermia = true;
     }
 
     private static void HypothermiaDeathIL(ILContext il)
@@ -104,8 +110,24 @@ public class HypothermiaNPC : GlobalNPC
 
     public bool hypothermia;
 
+    public override void SetDefaults(NPC entity)
+    {
+        entity.buffImmune[ModContent.BuffType<Hypothermia>()] = entity.coldDamage;
+    }
+
     public override void ResetEffects(NPC npc)
     {
         npc.GetGlobalNPC<HypothermiaNPC>().hypothermia = false;
+    }
+
+    public int DebuffDamage(NPC npc) => (int)Utils.Remap(ColdDebuffNPC.NetColdLevel(npc), Hypothermia.MinColdLevel, Hypothermia.MaxColdLevel, 2, 6);
+
+    public override void UpdateLifeRegen(NPC npc, ref int damage)
+    {
+        if (!npc.GetGlobalNPC<HypothermiaNPC>().hypothermia)
+        {
+            return;
+        }
+        npc.lifeRegen -= DebuffDamage(npc);
     }
 }

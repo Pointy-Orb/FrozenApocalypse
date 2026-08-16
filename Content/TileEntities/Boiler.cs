@@ -9,13 +9,13 @@ using ReLogic.Content;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria.Audio;
-using FrozenApocalypse.Content.Items;
 using Terraria.DataStructures;
 using Terraria.ObjectData;
 using System.Collections.Generic;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Terraria.ModLoader.IO;
+using FrozenApocalypse.Content.Gores;
 
 namespace FrozenApocalypse.Content.TileEntities;
 
@@ -32,6 +32,7 @@ public class Boiler : ModTile
         TileID.Sets.PreventsTileHammeringIfOnTopOfIt[Type] = true;
         TileID.Sets.AvoidedByMeteorLanding[Type] = true;
         TileID.Sets.AvoidedByNPCs[Type] = true;
+        TileID.Sets.PreventsSandfall[Type] = true;
 
         TileObjectData.newTile.CopyFrom(TileObjectData.Style3x3);
         TileObjectData.newTile.CoordinateHeights = [16, 16, 16];
@@ -87,6 +88,27 @@ public class Boiler : ModTile
             Main.LocalPlayer.cursorItemIconEnabled = true;
             Main.LocalPlayer.cursorItemIconID = ModContent.ItemType<BoilerItem>();
         }
+        else if (TileEntity.TryGet<BoilerEntity>(i, j, out BoilerEntity entity) && entity.timers.Count > 0)
+        {
+            Main.LocalPlayer.cursorItemIconEnabled = true;
+            Main.LocalPlayer.cursorItemIconID = ItemID.LivingFireBlock;
+        }
+    }
+
+    public override bool RightClick(int i, int j)
+    {
+        BoilerEntity entity;
+        if (!TileEntity.TryGet<BoilerEntity>(i, j, out entity))
+        {
+            return false;
+        }
+        if (entity.timers.Count <= 0)
+        {
+            return false;
+        }
+        entity.DrawRange();
+        SoundEngine.PlaySound(SoundID.MaxMana);
+        return true;
     }
 
     public override void PlaceInWorld(int i, int j, Item item)
@@ -198,8 +220,37 @@ public class BoilerEntity : ModTileEntity
         else
         {
             FuelUntilRangeIncrease = GetNextFuelQuota();
-            DrawRange();
+            if (timers.Count > 0)
+            {
+                DrawRange();
+                SoundEngine.PlaySound(SoundID.NPCHit22, WorldCenter);
+            }
+            else
+            {
+                SoundEngine.PlaySound(SoundID.LiquidsWaterLava, WorldCenter);
+                var rand = Main.rand.Next(3);
+                int id;
+                switch (rand)
+                {
+                    case 1:
+                        id = ModContent.GoreType<Smoke2>();
+                        break;
+                    case 2:
+                        id = ModContent.GoreType<Smoke3>();
+                        break;
+                    default:
+                    case 0:
+                        id = ModContent.GoreType<Smoke1>();
+                        break;
+                }
+                Gore.NewGorePerfect(new EntitySource_TileUpdate(Position.X, Position.Y), Position.ToWorldCoordinates(), new Vector2(0, -1), id, Main.rand.NextFloat(0.8f, 1.0f));
+            }
         }
+        AttemptUnfreeze();
+    }
+
+    private void AttemptUnfreeze(bool goAgain = true)
+    {
         int tries = 0;
         var Center = new Point16(Position.X + 1, Position.Y + 1);
         int unfreezeX = Main.rand.Next(Center.X - timers.Count, Center.X + timers.Count + 1);
@@ -214,7 +265,11 @@ public class BoilerEntity : ModTileEntity
         {
             return;
         }
-        TileFreezing.TryUnfreezeTile(unfreezeX, unfreezeY);
+        bool froze = TileFreezing.TryUnfreezeTile(unfreezeX, unfreezeY);
+        if (!froze && goAgain)
+        {
+            AttemptUnfreeze(false);
+        }
     }
 
     public bool TileInRange(int x, int y)
@@ -290,65 +345,6 @@ public class BoilerEntity : ModTileEntity
             }
             radians += (Math.PI * 0.0625) / (double)timers.Count;
         }
-    }
-}
-
-public class Fuels : GlobalItem
-{
-    public static readonly Dictionary<int, int> fuels = new();
-
-    public override void SetStaticDefaults()
-    {
-        fuels.Add(ItemID.Torch, 1);
-        if (RecipeGroup.recipeGroupIDs.ContainsKey("Wood"))
-        {
-            int groupIndex = RecipeGroup.recipeGroupIDs["Wood"];
-            RecipeGroup group = RecipeGroup.recipeGroups[groupIndex];
-            foreach (int item in group.ValidItems)
-            {
-                fuels.Add(item, 5);
-            }
-        }
-        fuels.Add(ModContent.ItemType<Peat>(), 20);
-        fuels.Add(ItemID.LavaBucket, 30);
-    }
-
-    public override bool? UseItem(Item item, Player player)
-    {
-        if (!fuels.ContainsKey(item.type))
-        {
-            return null;
-        }
-        var pos = Main.MouseWorld.ToTileCoordinates();
-        if (Main.tile[pos.X, pos.Y].TileType != ModContent.TileType<Boiler>())
-        {
-            return null;
-        }
-        if (!player.InInteractionRange(pos.X, pos.Y, TileReachCheckSettings.Simple))
-        {
-            return null;
-        }
-        BoilerEntity boiler;
-        if (!TileEntity.TryGet<BoilerEntity>(pos.X, pos.Y, out boiler))
-        {
-            return null;
-        }
-        if (boiler.DecrementFuelRequirement() || boiler.timers.Count <= 0)
-        {
-            boiler.timers.Push(fuels[item.type] * 60);
-        }
-        else
-        {
-            var curTimer = boiler.timers.Pop();
-            curTimer += fuels[item.type] * 60;
-            boiler.timers.Push(curTimer);
-        }
-        SoundEngine.PlaySound(SoundID.Item34, Main.MouseWorld);
-        for (int i = 0; i < 3; i++)
-        {
-            Dust.NewDustPerfect(Main.MouseWorld, DustID.Torch);
-        }
-        return true;
     }
 }
 

@@ -36,10 +36,6 @@ public class FrozenRegularTree : ModTree
         topsTexture = ModContent.Request<Texture2D>("FrozenApocalypse/Content/Tiles/Plants/FrozenRegularTree_Tops");
     }
 
-    public override void SetTreeFoliageSettings(Tile tile, ref int xoffset, ref int treeFrame, ref int floorY, ref int topTextureFrameWidth, ref int topTextureFrameHeight)
-    {
-    }
-
     public override int CreateDust()
     {
         return DustID.Snow;

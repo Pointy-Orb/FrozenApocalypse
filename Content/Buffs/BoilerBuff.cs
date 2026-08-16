@@ -2,6 +2,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Terraria.Localization;
+using FrozenApocalypse.Warmth;
 
 namespace FrozenApocalypse.Content.Buffs;
 

@@ -3,6 +3,7 @@ using Terraria.ModLoader;
 using Terraria;
 using Terraria.ID;
 using FrozenApocalypse.Content.Tiles;
+using FrozenApocalypse.Warmth;
 
 namespace FrozenApocalypse;
 
@@ -14,6 +15,7 @@ public class FrozenTileCounts : ModSystem
 
     public int TotalTileCount { get; private set; }
     public int TotalFrozenTileCount { get; private set; }
+    public int TotalUnfrozenTileCount => TotalTileCount - TotalFrozenTileCount;
 
     public override void TileCountsAvailable(ReadOnlySpan<int> tileCounts)
     {
@@ -24,12 +26,13 @@ public class FrozenTileCounts : ModSystem
         {
             TotalTileCount += tileCounts[i];
         }
+        ColdDebuffPlayer coldPlayer = Main.LocalPlayer.GetModPlayer<ColdDebuffPlayer>();
         if (TotalTileCount >= 1500)
         {
-            Main.SceneMetrics.SnowTileCount += TotalFrozenTileCount;
+            Main.SceneMetrics.SnowTileCount += TotalFrozenTileCount * (coldPlayer.boilerWarm && coldPlayer.NetColdLevel <= 0 ? 0 : 1);
             return;
         }
-        if (Main.LocalPlayer.GetModPlayer<ColdDebuffPlayer>().ColdLevel < 1)
+        if (coldPlayer.ColdLevel < 1)
         {
             return;
         }

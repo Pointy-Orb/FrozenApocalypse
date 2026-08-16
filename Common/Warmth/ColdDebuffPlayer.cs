@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.Audio;
 using System;
 using Terraria.ModLoader;
 using Terraria.ID;
@@ -6,7 +7,7 @@ using FrozenApocalypse.Content.TileEntities;
 using Terraria.DataStructures;
 using FrozenApocalypse.Content.Buffs;
 
-namespace FrozenApocalypse;
+namespace FrozenApocalypse.Warmth;
 
 public class ColdDebuffPlayer : ModPlayer
 {
@@ -120,6 +121,7 @@ public class ColdDebuffPlayer : ModPlayer
                 if (!wasBoilerWarm)
                 {
                     boiler.DrawRange();
+                    SoundEngine.PlaySound(SoundID.MaxMana);
                 }
             }
         }

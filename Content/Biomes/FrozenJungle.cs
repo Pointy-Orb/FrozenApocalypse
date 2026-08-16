@@ -1,5 +1,6 @@
 using Terraria;
 using Terraria.ModLoader;
+using FrozenApocalypse.Warmth;
 
 namespace FrozenApocalypse.Content.Biomes;
 

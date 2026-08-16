@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using ReLogic.Content;
+using FrozenApocalypse.Warmth;
 
 namespace FrozenApocalypse;
 

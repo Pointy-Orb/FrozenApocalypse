@@ -1,4 +1,4 @@
-Add coal as better boiler fuel
+Give secondary uses for peat and/or coal
 Make boiler fuels say so in tooltips
 Create autoloaded frost walls
 Create non-autoloaded frost walls

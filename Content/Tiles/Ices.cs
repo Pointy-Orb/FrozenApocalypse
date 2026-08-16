@@ -92,7 +92,7 @@ public class PearlfrostItem : FrozenTileItem { public override int Tile => ModCo
 public class Crimfrost : FrozenTile
 {
     public override int UnfrozenCounterpart => TileID.Crimstone;
-    public override Color MapColor => new Color(207, 117, 131);
+    public override Color MapColor => new Color(107, 17, 31);
     public override int? CorruptionTile => ModContent.TileType<Ebonfrost>();
     public override int? PurityTile => ModContent.TileType<EvilIce>();
     public override int? HallowTile => ModContent.TileType<Pearlfrost>();

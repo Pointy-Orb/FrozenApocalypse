@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.ID;
 using System.Collections.Generic;
 using Terraria.Localization;
+using FrozenApocalypse.Warmth;
 
 namespace FrozenApocalypse;
 

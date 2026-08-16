@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using System.Reflection;
+using Terraria.DataStructures;
 using System;
 
 namespace FrozenApocalypse.Content.Tiles;
@@ -59,7 +60,7 @@ public class AutoloadFrostTile : ModTile
         {
             FrozenApocalypseIDs.TileSets.FrozenJungleTiles.Add(Type);
         }
-        if (TileID.Sets.isDesertBiomeSand[UnfrozenCounterpart])
+        if (TileID.Sets.SandBiome[UnfrozenCounterpart] > 0)
         {
             FrozenApocalypseIDs.TileSets.FrozenDesertTiles.Add(Type);
         }
@@ -84,25 +85,85 @@ public class AutoloadFrostTile : ModTile
         return true;
     }
 
+    private TileDrawInfo curDrawInfo;
+
+    public override void DrawEffects(int i, int j, SpriteBatch spriteBatch, ref TileDrawInfo drawData)
+    {
+        curDrawInfo = drawData;
+    }
+
     public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
     {
         Tile tile = Main.tile[i, j];
 
+        Rectangle frame = new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, 16);
         Vector2 zero = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange);
+        Vector2 position = new Vector2(i * 16 - (int)Main.screenPosition.X, j * 16 - (int)Main.screenPosition.Y) + zero;
+        if (TileID.Sets.HasSlopeFrames[UnfrozenCounterpart])
+        {
+            frame.X = curDrawInfo.tileFrameX + curDrawInfo.addFrX;
+            frame.Y = curDrawInfo.tileFrameY + curDrawInfo.addFrY;
+            DrawOverlay(i, j, position, frame, spriteBatch);
+        }
+        else if (tile.Slope != SlopeType.Solid)
+        {
+            for (int l = 0; l < 8; l++)
+            {
+                Rectangle slopeFramePiece = frame;
+                slopeFramePiece.Width = 2;
+                if (tile.RightSlope)
+                {
+                    slopeFramePiece.Height -= l * 2;
+                }
+                else
+                {
+                    slopeFramePiece.Height -= (7 - l) * 2;
+                }
+                slopeFramePiece.X += l * 2;
+                int slopeYOffset = l * 2;
+                if (tile.LeftSlope)
+                {
+                    slopeYOffset = (7 - l) * 2;
+                }
+                if (tile.BottomSlope)
+                {
+                    slopeYOffset = 0;
+                    slopeFramePiece.Y += l * 2;
+                }
+                DrawOverlay(i, j, position + new Vector2(l * 2, slopeYOffset), slopeFramePiece, spriteBatch);
+            }
+        }
+        else if (tile.IsHalfBlock)
+        {
+            for (int l = 0; l < 4; l++)
+            {
+                Rectangle halfFrame = frame;
+                halfFrame.Height = 2;
+                halfFrame.Y += l * 4;
+                DrawOverlay(i, j, position + new Vector2(0, 8 + l * 2), halfFrame, spriteBatch);
+            }
+        }
+        else
+        {
+            DrawOverlay(i, j, position, frame, spriteBatch);
+        }
 
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
+    }
 
+    private void DrawOverlay(int i, int j, Vector2 position, Rectangle frame, SpriteBatch spriteBatch)
+    {
         spriteBatch.Draw(
             TextureAssets.Tile[Type].Value,
-            new Vector2(i * 16 - (int)Main.screenPosition.X, j * 16 - (int)Main.screenPosition.Y) + zero,
-            new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, 16),
+            position,
+            frame,
             Lighting.GetColor(i, j).MultiplyRGB(Color.Aqua) * 0.7f, 0f, default, 1f, SpriteEffects.None, 0f);
         spriteBatch.Draw(
             TextureAssets.Tile[Type].Value,
-            new Vector2(i * 16 - (int)Main.screenPosition.X, j * 16 - (int)Main.screenPosition.Y) + zero,
-            new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, 16),
+            position,
+            frame,
             Lighting.GetColor(i, j).MultiplyRGB(Color.Blue) * 0.7f, 0f, default, 1f, SpriteEffects.None, 0f);
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
     }
 }
 

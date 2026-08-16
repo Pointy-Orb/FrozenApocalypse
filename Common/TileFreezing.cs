@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Terraria.ModLoader.IO;
+using System.Threading;
 
 namespace FrozenApocalypse;
 
@@ -22,6 +23,7 @@ public class TileFreezing : ModSystem
     public static int ConvertsPerUpdate => Main.maxTilesY / 600;
 
     public static Dictionary<int, int> FreezableTiles = new();
+    public static Dictionary<int, int> FreezableWalls = new();
 
     bool wasDay = true;
 
@@ -56,6 +58,7 @@ public class TileFreezing : ModSystem
         if (Main.dayTime && !wasDay)
         {
             bandY += BandHeight / 2;
+            ThreadPool.QueueUserWorkItem(_ => CoalRunner.GenerateCoal(UpperBand - BandHeight, UpperBand));
         }
         for (int i = 0; i < ConvertsPerUpdate; i++)
         {
@@ -82,31 +85,7 @@ public class TileFreezing : ModSystem
                 return;
             }
         }
-        for (int i = x - 1; i <= x + 1; i++)
-        {
-            bool froze = false;
-            for (int j = y - 1; j <= y + 1; j++)
-            {
-                if (!WorldGen.InWorld(i, j))
-                {
-                    continue;
-                }
-                if (Main.tile[i, j].LiquidAmount > 0)
-                {
-                    TryFreezeLiquid(i, j);
-                    froze = true;
-                    break;
-                }
-            }
-            if (froze)
-            {
-                break;
-            }
-        }
-        if (tile.WallType == WallID.JungleUnsafe || tile.WallType == WallID.Jungle)
-        {
-            tile.WallType = (ushort)ModContent.WallType<PeatWall>();
-        }
+        AttemptWallFreeze(x, y);
         if (!tile.HasTile)
         {
             return;
@@ -157,6 +136,31 @@ public class TileFreezing : ModSystem
         {
             WorldGen.KillTile(x, y + 1);
         }
+    }
+
+    public static void AttemptWallFreeze(int x, int y)
+    {
+        foreach (BoilerEntity boiler in BoilerSystem.boilers)
+        {
+            if (boiler.TileInRange(x, y))
+            {
+                return;
+            }
+        }
+        if (Main.tile[x, y].LiquidAmount > 0)
+        {
+            TryFreezeLiquid(x, y);
+        }
+        Tile tile = Main.tile[x, y];
+        if (!FreezableWalls.ContainsKey(tile.WallType))
+        {
+            return;
+        }
+        if (ModContent.GetModWall(FreezableWalls[tile.WallType]) is AutoloadFrostWall frozenWall && frozenWall.Hot && y > UpperBand)
+        {
+            return;
+        }
+        tile.WallType = (ushort)FreezableWalls[tile.WallType];
     }
 
     private static void TryFreezeLiquid(int x, int y)
@@ -217,7 +221,7 @@ public class TileFreezing : ModSystem
                     if (!BoilerSystem.TileInBoilerRange(i, j))
                     {
                         var lTile = Main.tile[i, j];
-                        lTile.LiquidAmount = 0;
+                        WorldGen.EmptyLiquid(i, j);
                         WorldGen.PlaceTile(i, j, TileID.Stone, true);
                     }
                     i--;
@@ -229,7 +233,7 @@ public class TileFreezing : ModSystem
                 if (WorldGen.InWorld(i - 1, j) && !BoilerSystem.TileInBoilerRange(i - 1, j))
                 {
                     var lTile = Main.tile[i - 1, j];
-                    lTile.LiquidAmount = 0;
+                    WorldGen.EmptyLiquid(i, j);
                     lTile.Slope = SlopeType.Solid;
                     lTile.IsHalfBlock = false;
                 }
@@ -239,7 +243,7 @@ public class TileFreezing : ModSystem
                     if (!BoilerSystem.TileInBoilerRange(i, j))
                     {
                         var lTile = Main.tile[i, j];
-                        lTile.LiquidAmount = 0;
+                        WorldGen.EmptyLiquid(i, j);
                         WorldGen.PlaceTile(i, j, TileID.Stone, true);
                     }
                     i++;
@@ -247,7 +251,7 @@ public class TileFreezing : ModSystem
                 if (WorldGen.InWorld(i + 1, j) && !BoilerSystem.TileInBoilerRange(i + 1, j))
                 {
                     var lTile = Main.tile[i + 1, j];
-                    lTile.LiquidAmount = 0;
+                    WorldGen.EmptyLiquid(i, j);
                     lTile.Slope = SlopeType.Solid;
                     lTile.IsHalfBlock = false;
                 }
@@ -256,22 +260,32 @@ public class TileFreezing : ModSystem
                     WorldGen.PlaceTile(i, j, TileID.Stone, true);
                 }
             }
-            tile.LiquidAmount = 0;
+            WorldGen.EmptyLiquid(x, y);
             WorldGen.PlaceTile(x, y, TileID.Stone, true);
             SoundEngine.PlaySound(SoundID.LiquidsWaterLava, new Vector2(x, y).ToWorldCoordinates());
         }
     }
 
-    public static void TryUnfreezeTile(int i, int j)
+    public static bool TryUnfreezeTile(int i, int j)
     {
         if (!WorldGen.InWorld(i, j))
         {
-            return;
+            return false;
         }
         Tile tile = Main.tile[i, j];
+        if (FreezableWalls.ContainsValue(tile.WallType))
+        {
+            foreach (int key in FreezableWalls.Keys)
+            {
+                if (FreezableWalls[key] == tile.WallType)
+                {
+                    tile.WallType = (ushort)key;
+                }
+            }
+        }
         if (!tile.HasTile)
         {
-            return;
+            return false;
         }
         if (tile.TileType == TileID.BreakableIce)
         {
@@ -279,13 +293,9 @@ public class TileFreezing : ModSystem
             WorldGen.PlaceLiquid(i, j, (byte)LiquidID.Water, byte.MaxValue);
             WorldGen.SquareTileFrame(i, j);
         }
-        if (tile.WallType == ModContent.WallType<PeatWall>())
-        {
-            tile.WallType = WallID.JungleUnsafe;
-        }
         if (!FreezableTiles.ContainsValue(tile.TileType))
         {
-            return;
+            return false;
         }
         int desiredType = tile.TileType;
         foreach (int key in FreezableTiles.Keys)
@@ -302,6 +312,7 @@ public class TileFreezing : ModSystem
             tile.TileType = TileID.Grass;
         }
         WorldGen.SquareTileFrame(i, j);
+        return true;
     }
 }
 
@@ -325,10 +336,6 @@ public class RandomUpdateWallFreeze : GlobalWall
         {
             return;
         }
-        if (type != WallID.JungleUnsafe && type != WallID.Jungle)
-        {
-            return;
-        }
-        TileFreezing.AttemptTileFreeze(i, j, true);
+        TileFreezing.AttemptWallFreeze(i, j);
     }
 }

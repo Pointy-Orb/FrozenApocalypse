@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 using Terraria.ID;
 using System;
 using System.Linq;
+using FrozenApocalypse.Warmth;
 
 namespace FrozenApocalypse.Content.Biomes;
 
@@ -21,7 +22,18 @@ public class SnowWaste : ModBiome
 
     public override SceneEffectPriority Priority => SceneEffectPriority.BiomeMedium;
 
-    public override int Music => (!Main.swapMusic == Main.drunkWorld && !Main.remixWorld) ? MusicID.OtherworldlyIce : MusicLoader.GetMusicSlot(Mod, "Assets/Music/frozensurface");
+    public override int Music
+    {
+        get
+        {
+            ColdDebuffPlayer coldPlayer = Main.LocalPlayer.GetModPlayer<ColdDebuffPlayer>();
+            if (ModContent.GetInstance<FrozenTileCounts>().TotalUnfrozenTileCount > 200 && coldPlayer.boilerWarm && coldPlayer.NetColdLevel <= 0)
+            {
+                return -1;
+            }
+            return (!Main.swapMusic == Main.drunkWorld && !Main.remixWorld) ? MusicID.OtherworldlyIce : MusicLoader.GetMusicSlot(Mod, "Assets/Music/frozensurface");
+        }
+    }
 
     public override void SpecialVisuals(Player player, bool isActive)
     {

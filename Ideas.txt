@@ -30,3 +30,5 @@ Rogue planet should be split into phases, the blizzard phase and the atmosphere 
 Decide if it is worth it to disallow flight in deoxygenated areas, due to the fact flight needs air resistance. Decide if the gameplay implications would be interesting or just frustrating.
 
 Secret other thing: Add compatibility with the Solar Apocalypse mod, so that the rogue planet scenario triggers automatically after the sun dies in Dissipation.
+
+Fear debuff for underground frozen evil biomes. Don't know what it would do
