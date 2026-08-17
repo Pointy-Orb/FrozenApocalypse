@@ -20,12 +20,6 @@ public abstract class FrozenTile : ModTile
 
     public new virtual int MinPick => 0;
 
-    public virtual int? CorruptionTile => null;
-    public virtual int? CrimsonTile => null;
-    public virtual int? HallowTile => null;
-    public virtual int? PurityTile => null;
-    public virtual bool powderImmune => false;
-
     public sealed override void SetStaticDefaults()
     {
         TileFreezing.FreezableTiles.Add(UnfrozenCounterpart, Type);
@@ -60,6 +54,7 @@ public abstract class FrozenTile : ModTile
         if (TileID.Sets.Crimson[UnfrozenCounterpart])
         {
             TileID.Sets.AddCrimsonTile(Type);
+            TileID.Sets.Crimson[Type] = true;
         }
         if (TileID.Sets.Hallow[UnfrozenCounterpart])
         {
@@ -76,6 +71,8 @@ public abstract class FrozenTile : ModTile
         {
             FrozenApocalypseIDs.TileSets.FrozenDesertTiles.Add(Type);
         }
+
+        TileLoader.RegisterConversionFallback(Type, UnfrozenCounterpart);
 
         VanillaFallbackOnModDeletion = (ushort)UnfrozenCounterpart;
 
@@ -107,25 +104,13 @@ public abstract class FrozenTile : ModTile
 
     public virtual void PostSetStaticDefaults() { }
 
-    public override void Convert(int i, int j, int conversionType)
+    public override void OnTileConverted(int i, int j, int fromType, int toType, int conversionType)
     {
-        Tile tile = Main.tile[i, j];
-        if (conversionType == BiomeConversionID.Corruption && CorruptionTile != null)
+        if (fromType != Type)
         {
-            tile.TileType = (ushort)CorruptionTile;
+            return;
         }
-        if (conversionType == BiomeConversionID.Crimson && CrimsonTile != null)
-        {
-            tile.TileType = (ushort)CrimsonTile;
-        }
-        if (conversionType == BiomeConversionID.Hallow && HallowTile != null)
-        {
-            tile.TileType = (ushort)HallowTile;
-        }
-        if ((conversionType == BiomeConversionID.Purity || (!powderImmune && conversionType == BiomeConversionID.PurificationPowder)) && PurityTile != null)
-        {
-            tile.TileType = (ushort)PurityTile;
-        }
+        TileFreezing.AttemptTileFreeze(i, j, true, false);
     }
 }
 

@@ -107,6 +107,11 @@ Biomes: {
 		TownNPCDialogueName: the Tundra
 		DisplayName: Tundra
 	}
+
+	FrozenCrimson: {
+		TownNPCDialogueName: the Necrosed Crimson
+		DisplayName: Necrosed Crimson
+	}
 }
 
 Buffs: {

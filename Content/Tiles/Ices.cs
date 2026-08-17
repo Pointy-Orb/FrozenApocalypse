@@ -11,9 +11,6 @@ public class SandIce : FrozenTile
     public override int UnfrozenCounterpart => TileID.Sand;
     public override Color MapColor => new Color(196, 191, 171);
     public override bool Hot => true;
-    public override int? CorruptionTile => ModContent.TileType<EbonsandIce>();
-    public override int? CrimsonTile => ModContent.TileType<CrimsandIce>();
-    public override int? HallowTile => ModContent.TileType<PearlsandIce>();
 }
 public class SandIceItem : FrozenTileItem { public override int Tile => ModContent.TileType<SandIce>(); }
 
@@ -22,9 +19,6 @@ public class EbonsandIce : FrozenTile
     public override int UnfrozenCounterpart => TileID.Ebonsand;
     public override Color MapColor => new Color(155, 148, 164);
     public override bool Hot => true;
-    public override int? PurityTile => ModContent.TileType<SandIce>();
-    public override int? CrimsonTile => ModContent.TileType<CrimsandIce>();
-    public override int? HallowTile => ModContent.TileType<PearlsandIce>();
 }
 public class EbonsandIceItem : FrozenTileItem { public override int Tile => ModContent.TileType<EbonsandIce>(); }
 
@@ -33,21 +27,14 @@ public class PearlsandIce : FrozenTile
     public override int UnfrozenCounterpart => TileID.Pearlsand;
     public override Color MapColor => new Color(250, 238, 241);
     public override bool Hot => true;
-    public override int? CorruptionTile => ModContent.TileType<EbonsandIce>();
-    public override int? CrimsonTile => ModContent.TileType<CrimsandIce>();
-    public override int? PurityTile => ModContent.TileType<SandIce>();
-    public override bool powderImmune => true;
 }
 public class PearlsandIceItem : FrozenTileItem { public override int Tile => ModContent.TileType<PearlsandIce>(); }
 
 public class CrimsandIce : FrozenTile
 {
     public override int UnfrozenCounterpart => TileID.Crimsand;
-    public override Color MapColor => new Color(167, 165, 161);
+    public override Color MapColor => new Color(37, 35, 31);
     public override bool Hot => true;
-    public override int? CorruptionTile => ModContent.TileType<EbonsandIce>();
-    public override int? PurityTile => ModContent.TileType<SandIce>();
-    public override int? HallowTile => ModContent.TileType<PearlsandIce>();
 }
 public class CrimsandIceItem : FrozenTileItem { public override int Tile => ModContent.TileType<CrimsandIce>(); }
 
@@ -72,9 +59,6 @@ public class Ebonfrost : FrozenTile
 {
     public override int UnfrozenCounterpart => TileID.Ebonstone;
     public override Color MapColor => new Color(101, 115, 129);
-    public override int? PurityTile => ModContent.TileType<EvilIce>();
-    public override int? CrimsonTile => ModContent.TileType<Crimfrost>();
-    public override int? HallowTile => ModContent.TileType<Pearlfrost>();
 }
 public class EbonfrostItem : FrozenTileItem { public override int Tile => ModContent.TileType<Ebonfrost>(); }
 
@@ -82,20 +66,13 @@ public class Pearlfrost : FrozenTile
 {
     public override int UnfrozenCounterpart => TileID.Pearlstone;
     public override Color MapColor => new Color(211, 205, 209);
-    public override int? CorruptionTile => ModContent.TileType<Ebonfrost>();
-    public override int? CrimsonTile => ModContent.TileType<Crimfrost>();
-    public override int? PurityTile => ModContent.TileType<EvilIce>();
-    public override bool powderImmune => true;
 }
 public class PearlfrostItem : FrozenTileItem { public override int Tile => ModContent.TileType<Pearlfrost>(); }
 
 public class Crimfrost : FrozenTile
 {
     public override int UnfrozenCounterpart => TileID.Crimstone;
-    public override Color MapColor => new Color(107, 17, 31);
-    public override int? CorruptionTile => ModContent.TileType<Ebonfrost>();
-    public override int? PurityTile => ModContent.TileType<EvilIce>();
-    public override int? HallowTile => ModContent.TileType<Pearlfrost>();
+    public override Color MapColor => new Color(57, 17, 31);
 }
 public class CrimfrostItem : FrozenTileItem { public override int Tile => ModContent.TileType<Crimfrost>(); }
 
@@ -191,7 +168,4 @@ public class EvilIce : FrozenTile
         yield return new Item(ItemID.IceBlock);
     }
 
-    public override int? CorruptionTile => ModContent.TileType<Ebonfrost>();
-    public override int? CrimsonTile => ModContent.TileType<Crimfrost>();
-    public override int? HallowTile => ModContent.TileType<Pearlfrost>();
 }

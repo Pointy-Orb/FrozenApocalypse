@@ -75,7 +75,7 @@ public class TileFreezing : ModSystem
         wasDay = Main.dayTime;
     }
 
-    public static void AttemptTileFreeze(int x, int y, bool noPeat = false)
+    public static void AttemptTileFreeze(int x, int y, bool noPeat = false, bool freezeWall = true)
     {
         Tile tile = Main.tile[x, y];
         foreach (BoilerEntity boiler in BoilerSystem.boilers)
@@ -85,7 +85,10 @@ public class TileFreezing : ModSystem
                 return;
             }
         }
-        AttemptWallFreeze(x, y);
+        if (freezeWall)
+        {
+            AttemptWallFreeze(x, y);
+        }
         if (!tile.HasTile)
         {
             return;
@@ -138,7 +141,7 @@ public class TileFreezing : ModSystem
         }
     }
 
-    public static void AttemptWallFreeze(int x, int y)
+    public static void AttemptWallFreeze(int x, int y, bool freezeLiquid = true)
     {
         foreach (BoilerEntity boiler in BoilerSystem.boilers)
         {
@@ -147,7 +150,7 @@ public class TileFreezing : ModSystem
                 return;
             }
         }
-        if (Main.tile[x, y].LiquidAmount > 0)
+        if (Main.tile[x, y].LiquidAmount > 0 && freezeLiquid)
         {
             TryFreezeLiquid(x, y);
         }
@@ -266,26 +269,32 @@ public class TileFreezing : ModSystem
         }
     }
 
-    public static bool TryUnfreezeTile(int i, int j)
+    public static bool TryUnfreezeTile(int i, int j, bool unfreezeTile = true, bool unfreezeWall = true, bool reframe = true)
     {
         if (!WorldGen.InWorld(i, j))
         {
             return false;
         }
         Tile tile = Main.tile[i, j];
-        if (FreezableWalls.ContainsValue(tile.WallType))
+        bool unfrozeWall = false;
+        if (FreezableWalls.ContainsValue(tile.WallType) && unfreezeWall)
         {
             foreach (int key in FreezableWalls.Keys)
             {
                 if (FreezableWalls[key] == tile.WallType)
                 {
                     tile.WallType = (ushort)key;
+                    unfrozeWall = true;
                 }
             }
         }
-        if (!tile.HasTile)
+        if (!tile.HasTile || !unfreezeTile)
         {
-            return false;
+            if (unfrozeWall && reframe)
+            {
+                WorldGen.SquareWallFrame(i, j);
+            }
+            return unfrozeWall;
         }
         if (tile.TileType == TileID.BreakableIce)
         {
@@ -311,7 +320,10 @@ public class TileFreezing : ModSystem
         {
             tile.TileType = TileID.Grass;
         }
-        WorldGen.SquareTileFrame(i, j);
+        if (reframe)
+        {
+            WorldGen.SquareTileFrame(i, j);
+        }
         return true;
     }
 }

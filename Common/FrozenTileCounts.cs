@@ -12,6 +12,7 @@ public class FrozenTileCounts : ModSystem
     public int SnowWasteTileCount { get; set; }
     public int FrozenJungleTileCount { get; set; }
     public int FrozenDesertTileCount { get; set; }
+    public int FrozenCrimsonTileCount { get; set; }
 
     public int TotalTileCount { get; private set; }
     public int TotalFrozenTileCount { get; private set; }
@@ -44,6 +45,7 @@ public class FrozenTileCounts : ModSystem
     {
         SnowWasteTileCount = 0;
         FrozenJungleTileCount = 0;
+        FrozenCrimsonTileCount = 0;
         FrozenDesertTileCount = 0;
         TotalTileCount = 0;
         TotalFrozenTileCount = 0;
@@ -63,10 +65,13 @@ public class FrozenTileCounts : ModSystem
         {
             FrozenDesertTileCount += tileCounts[FrozenApocalypseIDs.TileSets.FrozenDesertTiles[i]];
         }
-
         foreach (int frozenTile in TileFreezing.FreezableTiles.Values)
         {
             TotalFrozenTileCount += tileCounts[frozenTile];
+            if (TileID.Sets.Crimson[frozenTile])
+            {
+                FrozenCrimsonTileCount += tileCounts[frozenTile];
+            }
         }
     }
 }

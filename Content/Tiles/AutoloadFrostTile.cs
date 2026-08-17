@@ -37,6 +37,7 @@ public class AutoloadFrostTile : ModTile
             RegisterItemDrop(manualItemDrop);
         }
         TileFreezing.FreezableTiles.Add(UnfrozenCounterpart, Type);
+        TileLoader.RegisterConversionFallback(Type, UnfrozenCounterpart);
         Main.tileSolid[Type] = Main.tileSolid[UnfrozenCounterpart];
         Main.tileMergeDirt[Type] = Main.tileMergeDirt[UnfrozenCounterpart];
         bool[] tileMerge = Main.tileMerge[UnfrozenCounterpart];
@@ -164,6 +165,15 @@ public class AutoloadFrostTile : ModTile
             position,
             frame,
             Lighting.GetColor(i, j).MultiplyRGB(Color.Blue) * 0.7f, 0f, default, 1f, SpriteEffects.None, 0f);
+    }
+
+    public override void OnTileConverted(int i, int j, int fromType, int toType, int conversionType)
+    {
+        if (fromType != Type)
+        {
+            return;
+        }
+        TileFreezing.AttemptTileFreeze(i, j, true, false);
     }
 }
 

@@ -125,6 +125,7 @@ public class ColdDebuffNPC : GlobalNPC
         vColor.X = Utils.Remap(NetColdLevel(npc), 0, 10, vColor.X, vColor.X * 0.3f, true);
         vColor.Y = Utils.Remap(NetColdLevel(npc), 0, 10, vColor.Y, vColor.Y * 0.5f, true);
         vColor.Z = Utils.Remap(NetColdLevel(npc), 0, 10, vColor.Z, 1, true);
-        drawColor = new Color(vColor);
+        Color light = Lighting.GetColor((int)((double)npc.position.X + (double)npc.width * 0.5) / 16, (int)(((double)npc.position.Y + (double)npc.height * 0.5) / 16.0));
+        drawColor = new Color(vColor).MultiplyRGB(light);
     }
 }

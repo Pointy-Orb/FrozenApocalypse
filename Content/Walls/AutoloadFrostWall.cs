@@ -1,6 +1,6 @@
 using Terraria;
 using System.Linq;
-using Terraria.Localization;
+using System.Collections.Generic;
 using Terraria.Map;
 using Terraria.ModLoader;
 using Terraria.ID;
@@ -20,13 +20,18 @@ public class AutoloadFrostWall : ModWall
 
     public override string Name => $"Frosted{WallID.Search.GetName(UnfrozenCounterpart)}Wall";
 
-    public override string Texture => $"Terraria/Images/Wall_{UnfrozenCounterpart}";
+    public override string Texture => textureOverride ?? $"Terraria/Images/Wall_{UnfrozenCounterpart}";
+    private readonly string textureOverride;
 
-    public AutoloadFrostWall(int originalType, int fallback = -1, bool hot = false)
+    private readonly Color? mapColorOverride = null;
+
+    public AutoloadFrostWall(int originalType, int fallback = -1, bool hot = false, string customTexture = null, Color? mapColorOverride = null)
     {
         UnfrozenCounterpart = originalType;
         this.fallback = fallback;
         Hot = hot;
+        textureOverride = customTexture;
+        this.mapColorOverride = mapColorOverride;
     }
 
     public override void SetStaticDefaults()
@@ -37,11 +42,18 @@ public class AutoloadFrostWall : ModWall
             TileFreezing.FreezableWalls.Add(fallback, Type);
         }
 
+        WallLoader.RegisterConversionFallback(Type, UnfrozenCounterpart);
         VanillaFallbackOnModDeletion = (ushort)UnfrozenCounterpart;
 
         WallID.Sets.Corrupt[Type] = WallID.Sets.Corrupt[UnfrozenCounterpart];
         WallID.Sets.Crimson[Type] = WallID.Sets.Crimson[UnfrozenCounterpart];
         WallID.Sets.Hallow[Type] = WallID.Sets.Hallow[UnfrozenCounterpart];
+
+        if (mapColorOverride != null)
+        {
+            AddMapEntry(mapColorOverride.Value);
+            return;
+        }
 
         Color[] ColorLookup = (Color[])typeof(MapHelper).GetField("colorLookup", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
         Color frostedColor = ColorLookup[MapHelper.wallLookup[UnfrozenCounterpart]];
@@ -54,13 +66,12 @@ public class AutoloadFrostWall : ModWall
         AddMapEntry(frostedColor);
     }
 
-    public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
-    {
-        return true;
-    }
-
     public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
     {
+        if (textureOverride != null)
+        {
+            return;
+        }
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
         Tile tile = Main.tile[i, j];
@@ -82,6 +93,15 @@ public class AutoloadFrostWall : ModWall
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null);
     }
+
+    public override void OnWallConverted(int i, int j, int fromType, int toType, int conversionType)
+    {
+        if (fromType != Type)
+        {
+            return;
+        }
+        TileFreezing.AttemptWallFreeze(i, j, false);
+    }
 }
 
 public class AutoloadWallLoader : ILoadable
@@ -102,6 +122,9 @@ public class AutoloadWallLoader : ILoadable
                 mod.AddContent(new AutoloadFrostWall(i, -1, true));
             }
         }
+        mod.AddContent(new AutoloadFrostWall(WallID.EbonstoneUnsafe, WallID.EbonstoneEcho, false, "FrozenApocalypse/Content/Walls/EbonfrostWall"));
+        mod.AddContent(new AutoloadFrostWall(WallID.CrimstoneUnsafe, WallID.CrimstoneEcho, false, "FrozenApocalypse/Content/Walls/CrimfrostWall", new Color(10, 0, 0)));
+        mod.AddContent(new AutoloadFrostWall(WallID.PearlstoneBrickUnsafe, WallID.PearlstoneEcho, false, "FrozenApocalypse/Content/Walls/PearlfrostWall"));
     }
 
     public void Unload()

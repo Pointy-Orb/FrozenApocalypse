@@ -27,7 +27,6 @@ public class FreezeDebuffChanges : GlobalBuff
             Main.npcChatText = "...";
         }
         FreezeDebuffNPC.GetInstance(npc).frozen = true;
-        npc.velocity.X *= 0.8f;
     }
 
 }
@@ -45,6 +44,12 @@ public class FreezeDebuffNPC : GlobalNPC
     public override void SetDefaults(NPC entity)
     {
         entity.buffImmune[BuffID.Frozen] |= entity.coldDamage || entity.boss;
+        if (NPCID.Sets.ProjectileNPC[entity.type]) entity.buffImmune[BuffID.Frozen] = true;
+        if (NPCID.Sets.BelongsToInvasionOldOnesArmy[entity.type]) entity.buffImmune[BuffID.Frozen] = true;
+        if (NPCID.Sets.ShouldBeCountedAsBoss[entity.type]) entity.buffImmune[BuffID.Frozen] = true;
+        if (entity.aiStyle == NPCAIStyleID.MartianSaucer) entity.buffImmune[BuffID.Frozen] = true;
+        if (entity.DoesntDespawnToInactivity()) entity.buffImmune[BuffID.Frozen] = true;
+        if (entity.aiStyle == NPCAIStyleID.Worm) entity.buffImmune[BuffID.Frozen] = true;
     }
 
     public override void OnSpawn(NPC npc, IEntitySource source)
@@ -76,6 +81,12 @@ public class FreezeDebuffNPC : GlobalNPC
             npc.DelBuff(frozenIndex);
             return true;
         }
+        if (npc.noTileCollide)
+        {
+            npc.velocity *= 0.9f;
+            return false; //Prevent npcs that ignore tiles from falling through the world
+        }
+        npc.velocity.X *= 0.9f;
         if (npc.position.Y == npc.oldPosition.Y)
         {
             GetInstance(npc).timeAirborne = 0;
